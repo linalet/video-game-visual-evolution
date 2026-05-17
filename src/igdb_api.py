@@ -1,0 +1,83 @@
+"""IGDB API interaction and image downloading."""
+
+import os
+import requests
+from dotenv import load_dotenv
+
+URL = "https://api.igdb.com/v4/games"
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(ROOT_DIR, "data")
+SCREENSHOT_DIR = os.path.join(DATA_DIR, "screenshots")
+load_dotenv()
+client_ID = os.getenv("CLIENT_ID")
+access_token = os.getenv("ACCESS_TOKEN")
+HEADERS = {"Client-ID": client_ID, "Authorization": f"Bearer {access_token}"}
+
+
+def query_igdb(year, limit=500, offset=0):
+    """
+    Query games released in a given year. Download screenshots.
+    Returns a dictionary of games.
+    """
+    query = f"""
+    fields release_dates.y, name, screenshots.url, genres.name,
+    themes.name, keywords.name, player_perspectives.name, 
+    involved_companies.developer, involved_companies.company.name;
+    where release_dates.y = {year} & screenshots != null;
+    limit {limit};
+    offset {offset};
+    """
+    try:
+        response = requests.post(URL, headers=HEADERS, data=query, timeout=15)
+        response.raise_for_status()
+        return response.json()
+
+    except requests.RequestException as e:
+        print(f"[ERROR] Failed to fetch games for {year} (offset {offset}): {e}")
+        return []
+
+
+def normalize_igdb_url(url):
+    """Normalize IGDB image URLs. (IGDB changed URL format :( )."""
+
+    url = url.strip()
+
+    while url.startswith("https://https://"):
+        url = url.replace("https://https://", "https://")
+
+    if url.startswith("//"):
+        url = "https:" + url
+
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = "https://" + url.lstrip("/")
+
+    return url
+
+
+def download_image(url, folder=SCREENSHOT_DIR):
+    """Download a screenshot from IGDB URL, if it isn’t already downloaded.
+    Returns the local file path and IGDB image url"""
+
+    os.makedirs(folder, exist_ok=True)
+
+    url = normalize_igdb_url(url)
+    img_url = url.replace("t_thumb", "t_screenshot_big")
+    filename = os.path.join(folder, img_url.split("/")[-1])
+
+    # Skip download if already exists
+    if os.path.exists(filename):
+        return filename, img_url
+
+    try:
+        img_data = requests.get(img_url, timeout=15)
+        img_data.raise_for_status()
+
+        with open(filename, "wb") as f:
+            f.write(img_data.content)
+
+        return filename, img_url
+
+    except requests.RequestException as e:
+        print(f"[ERROR] Failed to download image {img_url}: {e}")
+        return None, None

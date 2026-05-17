@@ -1,0 +1,227 @@
+""" "Helper functions for Streamlit app. Taxonomy information, visualization and UI state management."""
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+STYLE_ORDER = [
+    "Global",
+    "Realism: Photoreal",
+    "Realism: Stylized",
+    "Stylization: Cartoon",
+    "Stylization: Illustrative",
+    "Stylization: Pixel Art",
+    "Stylization: Material-Based",
+    "Abstraction: Minimalist",
+    "Abstraction: Symbolic",
+]
+STYLE_COLORS = {
+    "Abstraction: Symbolic": "#0067B0",
+    "Abstraction: Minimalist": "#00D4FF",
+    "Realism: Photoreal": "#76CE8A",
+    "Realism: Stylized": "#319364",
+    "Stylization: Cartoon": "#AA4499",
+    "Stylization: Pixel Art": "#CC6677",
+    "Stylization: Material-Based": "#F1DE7E",
+    "Stylization: Illustrative": "#882255",
+    "Unknown": "#808080",  # Gray
+    # "Unclassified": "#444444",  # Dark Gray
+}
+taxonomy_data = {
+    "1️⃣ Realism": {
+        "Photoreal": {
+            "description": "Visuals trying to look as realistic as possible. Can utilize physically based rendering (PBR) and high-resolution textures.",
+            "keywords": [
+                "photoreal",
+                "ray tracing",
+                "realistic",
+                "4k",
+            ],
+            "example_games": [
+                {"id": "cyberpunk 2077 (2020) [cd projekt red]", "shot_index": 3},
+                {"id": "the last of us part ii (2020) [naughty dog]", "shot_index": 0},
+                {"id": "forza horizon 5 (2021) [playground games]", "shot_index": 0},
+            ],
+        },
+        "Stylized": {
+            "description": "Retains realistic proportions and lighting but adds artistic flair. Often mimics the look of high-end film or fantasy illustration.",
+            "keywords": [
+                "cinematic",
+                "atmospheric",
+            ],
+            "example_games": [
+                {"id": "the sims 4 (2014) [maxis]", "shot_index": 4},
+                {"id": "portal 2 (2011) [valve]", "shot_index": 1},
+                {"id": "the witcher 3: wild hunt (2015) [cd projekt red]", "shot_index": 1},
+            ],
+        },
+    },
+    "2️⃣ Stylization": {
+        "Cartoon": {
+            "description": "Focuses on exaggerated proportions and vibrant colors. Often inspired by anime or cartoons.",
+            "keywords": ["anime", "manga", "chibi", "cartoon"],
+            "example_games": [
+                {"id": "team fortress 2 (2007) [valve]", "shot_index": 0},
+                {
+                    "id": "genshin impact (2020) [mihoyo]",
+                    "shot_index": 0,
+                },
+                {"id": "super mario odyssey (2017) [nintendo]", "shot_index": 0},
+            ],
+        },
+        "Illustrative": {
+            "description": "Emphasizes the 'art'. Mimics physical media like watercolors or ink drawings.",
+            "keywords": [
+                "watercolor",
+                "hand-painted",
+                "hand-drawn",
+            ],
+            "example_games": [
+                {"id": "machinarium (2009) [amanita design]", "shot_index": 0},
+                {"id": "ōkami (2006) [clover studio]", "shot_index": 2},
+                {"id": "don't starve (2013) [klei entertainment]", "shot_index": 0},
+            ],
+        },
+        "Pixel Art": {
+            "description": "Art style limited or inspired by the technical constraints of early gaming hardware. Uses squares.",
+            "keywords": ["pixel art", "8-bit", "16-bit", "voxel", "pixel graphics"],
+            "example_games": [
+                {"id": "stardew valley (2016) [concernedape]", "shot_index": 0},
+                {"id": "minecraft (2011) [mojang studios]", "shot_index": 3},
+                {"id": "undertale (2015) [tobyfox]", "shot_index": 3},
+            ],
+        },
+        "Material-Based": {
+            "description": "Games designed to look like they are constructed from physical materials. Often uses stop-motion.",
+            "keywords": [
+                "claymation",
+                "paper aesthetic",
+                "stop motion",
+            ],
+            "example_games": [
+                {"id": "it takes two (2021) [hazelight studios]", "shot_index": 0},
+                {"id": "the neverhood (1996) [the neverhood, inc.]", "shot_index": 2},
+                {"id": "samorost 3 (2016) [amanita design]", "shot_index": 3},
+            ],
+        },
+    },
+    "3️⃣ Abstraction": {
+        "Minimalist": {
+            "description": "Reduces visuals to only essential elements. Uses clean lines, silhouettes, and simple shapes.",
+            "keywords": ["geometry", "minimalist", "minimalism"],
+            "example_games": [
+                {"id": "superhot (2016) [superhot team]", "shot_index": 0},
+                {"id": "voxel blast (2015) [ceiba software & arts]", "shot_index": 1},
+                {"id": "limbo (2010) [playdead]", "shot_index": 4},
+            ],
+        },
+        "Symbolic": {
+            "description": "Color and shape represent ideas or mechanics. Also includestext-based and audio-based games with limited visual art.",
+            "keywords": ["text-based", "experimental", "ascii", "abstract"],
+            "example_games": [
+                {
+                    "id": "the hitchhiker's guide to the galaxy (1984) [infocom]",
+                    "shot_index": 0,
+                },
+                {"id": "thomas was alone (2012) [bithell games]", "shot_index": 2},
+                {"id": "dark echo (2015) [rac7 games]", "shot_index": 1},
+            ],
+        },
+    },
+}
+
+"""UI state managementfunctions"""
+
+
+def on_selectbox_change():
+    if st.session_state.all_time_box != "Select...":
+        st.session_state.all_search = ""
+
+
+def on_text_change():
+    if st.session_state.all_search.strip() != "":
+        st.session_state.all_time_box = "Select..."
+
+
+def on_selectbox_change_dec():
+    val = st.session_state["dec_sel_widget"]
+    if val != "Select...":
+        st.session_state["active_studio_id"] = val
+        st.session_state["dec_text_input"] = ""
+
+
+def on_text_change_dec():
+    val = st.session_state["dec_text_input"].strip()
+    if val != "":
+        st.session_state["active_studio_id"] = val
+        st.session_state["dec_sel_widget"] = "Select..."
+
+
+def draw_color_strip(palette_str, height=50):
+    """Draws a horizontal strip of colors from a palette string. Height is adjustable."""
+    height = f"{height}px"
+    if not palette_str:
+        st.info("No color data available.")
+        return
+
+    html = f'<div style="display: flex; height: {height}; border-radius: 8px; overflow: hidden; border: 2px solid #999; margin-bottom: 2px;">'
+    hex_labels = '<div style="display: flex; margin-bottom: 10px;">'
+
+    colors = palette_str.split("|")
+    for c in colors:
+        html += f'<div style="background-color:{c}; flex:1;" title="{c.upper()}"></div>'
+        hex_labels += f'<div style="flex:1; text-align:center; font-size:13px; color:gray; font-family:monospace;">{c.upper()}</div>'
+
+    html += "</div>"
+    hex_labels += "</div>"
+    st.markdown(html + hex_labels, unsafe_allow_html=True)
+
+
+def draw_style_distribution(dist_dict, unclassified_pct, tab, studio_name="default", suffix=""):
+    """Draws a  pie chart of art style distributions color-coded by style"""
+    if not dist_dict:
+        st.info("No art style distribution data available.")
+        return
+    df_pie = pd.DataFrame({"Style": list(dist_dict.keys()), "Percentage": list(dist_dict.values())})
+
+    fig = px.pie(
+        df_pie,
+        values="Percentage",
+        names="Style",
+        color="Style",
+        color_discrete_map=STYLE_COLORS,
+        hole=0.35,
+    )
+    fig.update_layout(
+        showlegend=True,
+        height=400,
+        margin=dict(t=0, b=0, l=0, r=0),
+        legend=dict(font=dict(size=24)),
+    )
+    fig.update_traces(
+        textposition="inside",
+        textinfo="percent",
+        insidetextfont=dict(size=22, color="white", family="Arial Black"),
+    )
+    chart_id = f"pie_{studio_name.replace(' ', '_').lower()}"
+    clean_name = studio_name.replace(" ", "_").lower()
+    chart_id = f"pie_{clean_name}_{tab}_{suffix}"
+    st.plotly_chart(fig, width="stretch", key=chart_id)
+    classified = 100 - (unclassified_pct * 100)
+    st.caption(f"{classified:.1f}% of games from this studio were assigned an art style.")
+
+
+def display_studio_stats(row, tab, suffix=""):
+    """Displays the studio's color signature and art style distribution."""
+    st.write(f"### {row['Studio'].title()}'s Color Signature")
+    st.caption(f"Collected from {row['Game_Count']} games")
+    draw_color_strip(row["Palette"], height=60)
+
+    st.write("### Art Style Breakdown")
+    draw_style_distribution(
+        row["Style_Distribution"],
+        unclassified_pct=row["Unclassified_Pct"],
+        studio_name=row["Studio"],
+        tab=tab,
+        suffix=suffix,
+    )

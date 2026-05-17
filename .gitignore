@@ -1,0 +1,10 @@
+.env
+data/screenshots/
+data/ignore/
+data/human_readable_backup.csv
+data/unused/
+notebooks/
+trash/
+__pycache__/
+*.pyc
+
