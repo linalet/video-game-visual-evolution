@@ -8,7 +8,7 @@ import preprocess_helper as ph
 import helper_functions as helper
 
 
-def run_preprocessing(input_path="data/final_game_data_fixed.parquet"):
+def run_preprocessing(input_path="data/game_data.parquet"):
     """Main preprocessing function to clean data, apply taxonomy, and generate summary files."""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, input_path)
@@ -68,26 +68,26 @@ def run_preprocessing(input_path="data/final_game_data_fixed.parquet"):
 
     print("Creating summaries")
     style_p, class_s = ph.generate_style_stats(df)
-    style_p.to_parquet(os.path.join(base_dir, "data/fixed_summary_style_popularity.parquet"))
-    class_s.to_parquet(os.path.join(base_dir, "data/fixed_summary_success_rate.parquet"))
+    style_p.to_parquet(os.path.join(base_dir, "data/summary_style_popularity.parquet"))
+    class_s.to_parquet(os.path.join(base_dir, "data/summary_success_rate.parquet"))
 
     ph.generate_decade_style_summary(df).to_parquet(
-        os.path.join(base_dir, "data/fixed_summary_decades.parquet")
+        os.path.join(base_dir, "data/summary_decades.parquet")
     )
 
     ph.generate_timeline_summary(df, "Genres").to_parquet(
-        os.path.join(base_dir, "data/fixed_summary_genres.parquet")
+        os.path.join(base_dir, "data/summary_genres.parquet")
     )
     ph.generate_timeline_summary(df, "Themes").to_parquet(
-        os.path.join(base_dir, "data/fixed_summary_themes.parquet")
+        os.path.join(base_dir, "data/summary_themes.parquet")
     )
 
     ph.generate_studio_summary(df).to_parquet(
-        os.path.join(base_dir, "data/fixed_summary_studios.parquet")
+        os.path.join(base_dir, "data/summary_studios.parquet")
     )
 
     sample_df = ph.create_homepage_samples(df, helper.taxonomy_data.values())
-    sample_df.to_parquet("data/fixed_homepage_samples.parquet")
+    sample_df.to_parquet("data/homepage_samples.parquet")
 
     search_cols = [
         "Unique_ID",
@@ -102,7 +102,7 @@ def run_preprocessing(input_path="data/final_game_data_fixed.parquet"):
         "Is_NSFW",
     ]
     df.drop_duplicates("Unique_ID")[search_cols].to_parquet(
-        os.path.join(base_dir, "data/fixed_search_metadata.parquet")
+        os.path.join(base_dir, "data/search_metadata.parquet")
     )
 
     color_headers = []
@@ -113,7 +113,7 @@ def run_preprocessing(input_path="data/final_game_data_fixed.parquet"):
         "Screenshot",
     ] + color_headers
     df_optimized = df[keepers]
-    df_optimized.to_parquet(os.path.join(base_dir, "data/fixed_screenshot_colors.parquet"))
+    df_optimized.to_parquet(os.path.join(base_dir, "data/screenshot_colors.parquet"))
 
     keepers = [
         "Unique_ID",
@@ -122,7 +122,7 @@ def run_preprocessing(input_path="data/final_game_data_fixed.parquet"):
         "Sat_Variance",
     ]
     df_optimized = df[keepers]
-    df_optimized.to_parquet(os.path.join(base_dir, "data/fixed_color_analytics.parquet"))
+    df_optimized.to_parquet(os.path.join(base_dir, "data/color_analytics.parquet"))
 
     print("Preprocessing complete")
 

@@ -57,7 +57,7 @@ def get_summary(filename):
 @st.cache_data
 def get_game_analytics(game_id: str):
     """Load the color data for a specific game."""
-    path = os.path.join(BASE_DIR, "data", "fixed_color_analytics.parquet")
+    path = os.path.join(BASE_DIR, "data", "color_analytics.parquet")
     table = pq.read_table(path, filters=[("Unique_ID", "=", game_id)])
     return table.to_pandas()
 
@@ -65,7 +65,7 @@ def get_game_analytics(game_id: str):
 @st.cache_data
 def get_specific_game_screenshots(game_id):
     """Load the screenshot data for a specific game."""
-    path = os.path.join(BASE_DIR, "data", "fixed_screenshot_colors.parquet")
+    path = os.path.join(BASE_DIR, "data", "screenshot_colors.parquet")
     table = pq.read_table(path, filters=[("Unique_ID", "=", game_id)])
     return table.to_pandas()
 
@@ -161,7 +161,7 @@ if page == "Project overview":
             They are further divided into sub-categories based on keywords used to describe the game. Read more below for the detailed classification logic and examples.
             """
     )
-    homepage_data = get_summary("fixed_homepage_samples.parquet")
+    homepage_data = get_summary("homepage_samples.parquet")
     for branch, styles in helper.taxonomy_data.items():
         st.subheader(f"{branch}")
 
@@ -256,7 +256,7 @@ elif page == "Art style popularity":
             "nav-link-selected": {"background-color": "#0067B0"},
         },
     )
-    pop_df = get_summary("fixed_summary_style_popularity.parquet")
+    pop_df = get_summary("summary_style_popularity.parquet")
     if graph_tab == "Art style distribution":
         st.subheader("Style distribution by year")
         st.write("""
@@ -335,7 +335,7 @@ elif page == "Art style popularity":
         st.write(
             "This graph illustrates the percentage of games classified into an art style for each decade."
         )
-        success_df = get_summary("fixed_summary_success_rate.parquet")
+        success_df = get_summary("summary_success_rate.parquet")
         chart_data = success_df[success_df["Decade"] < 3000]
         fig2 = px.bar(
             chart_data,
@@ -363,7 +363,7 @@ elif page == "Art style popularity":
 elif page == "Color through decades":
     st.header("🎨 Color through decades")
     st.subheader("Dominant colors of each decade")
-    decade_summary = get_summary("fixed_summary_decades.parquet")
+    decade_summary = get_summary("summary_decades.parquet")
     decades_list = sorted(decade_summary["Decade"].unique().tolist())
     tabs = option_menu(
         None,
@@ -422,7 +422,7 @@ elif page == "Color through decades":
         ]
 
         if not combo_data.empty:
-            search_metadata = get_summary("fixed_search_metadata.parquet")
+            search_metadata = get_summary("search_metadata.parquet")
             helper.draw_color_strip(combo_data.iloc[0]["Palette"], height=50)
 
             st.subheader(f"Randomized examples from {sel_style} in the {sel_dec}s")
@@ -459,7 +459,7 @@ elif page in ["Genre timelines", "Theme timelines"]:
     st.write(f"Exploration of how the use of colors changed depending on the {mode}.")
     st.info("**💡TOOL TIP**: Click the 🔍 tab to expand and see year-by-year breakdowns.")
 
-    timeline_df = get_summary(f"fixed_summary_{mode.lower()}s.parquet")
+    timeline_df = get_summary(f"summary_{mode.lower()}s.parquet")
     items = sorted(timeline_df["Item"].unique())
     sel_item = st.selectbox(f"Select a {mode}", items)
 
@@ -517,7 +517,7 @@ elif page == "Game developer profile":
     st.write(
         "Select a major studio from the dropdown or search by name to see their most used colors and art styles."
     )
-    studio_summary = get_summary("fixed_summary_studios.parquet")
+    studio_summary = get_summary("summary_studios.parquet")
 
     studio_tabs = option_menu(
         None,
@@ -714,7 +714,7 @@ elif page == "Game developer profile":
 
 elif page == "Individual game analysis":
     st.header("🔍 Individual game analysis")
-    search_metadata = get_summary("fixed_search_metadata.parquet")
+    search_metadata = get_summary("search_metadata.parquet")
 
     if st.button("🎲 Random game"):
         random_game = search_metadata["Unique_ID"].sample(1).iloc[0]
@@ -725,7 +725,7 @@ elif page == "Individual game analysis":
         """💡TOOL TIP: Start writing a game title, then pick the specific game from the selectbox. E.g., "mario kart" -> "mario kart wii (2008) [nintendo]". """
     )
 
-    decade_summary = get_summary("fixed_summary_decades.parquet")
+    decade_summary = get_summary("summary_decades.parquet")
 
     unique_games = sorted(search_metadata["Unique_ID"].unique())
 

@@ -130,9 +130,8 @@ taxonomy_data = {
     },
 }
 
-"""UI state managementfunctions"""
 
-
+# UI state managementfunctions
 def on_selectbox_change():
     if st.session_state.all_time_box != "Select...":
         st.session_state.all_search = ""

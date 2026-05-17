@@ -14,7 +14,7 @@ COLOR_COUNT = 10
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT_DIR, "data")
-OUTPUT_PARQUET = os.path.join(DATA_DIR, "final_game_data.parquet")
+OUTPUT_PARQUET = os.path.join(DATA_DIR, "game_data.parquet")
 
 # List of keywords to filter nsfw images
 NSFW_WORDS = [
